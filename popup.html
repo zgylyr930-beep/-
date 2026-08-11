@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>网页翻译</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header class="brand">
+      <img src="icons/icon-128.png" alt="" class="logo">
+      <div><h1>流光翻译</h1><p>English to Chinese · DeepSeek</p></div>
+      <span class="online" title="插件已启用"></span>
+    </header>
+    <section class="glass-card">
+      <div class="direction"><span>翻译方向</span><strong><i>EN</i><b>→</b><i>中</i></strong></div>
+      <label class="auto-row">
+        <span><strong>自动翻译</strong><small>识别英文正文后自动启动</small></span>
+        <span class="switch"><input id="autoTranslate" type="checkbox"><span class="slider"></span></span>
+      </label>
+    </section>
+    <button id="translate" class="primary"><span>译</span>翻译当前网页</button>
+    <div class="secondary-actions">
+      <button id="restore" class="secondary">恢复英文</button>
+      <button id="settings" class="secondary">API 设置</button>
+    </div>
+    <p id="status" role="status"></p>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

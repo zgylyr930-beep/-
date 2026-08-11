@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DeepSeek API 设置</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <header><span class="logo">译</span><div><h1>DeepSeek API 设置</h1><p>配置仅保存在这台电脑的 Chrome 本地存储中。</p></div></header>
+    <section>
+      <label for="apiKey">API Key</label>
+      <div class="key-row">
+        <input id="apiKey" type="password" autocomplete="off" placeholder="sk-…">
+        <button id="toggle" class="secondary" type="button">显示</button>
+      </div>
+      <label for="model">模型</label>
+      <select id="model">
+        <option value="deepseek-v4-flash">DeepSeek V4 Flash（推荐，更快）</option>
+        <option value="deepseek-v4-pro">DeepSeek V4 Pro（质量优先）</option>
+      </select>
+      <div class="actions">
+        <button id="save" type="button">保存设置</button>
+        <button id="test" class="secondary" type="button">测试连接</button>
+      </div>
+      <p id="status" role="status"></p>
+    </section>
+    <aside>提示：这是个人自用方案。API Key 不会写入插件源码，也不会通过 Chrome 账号同步，但电脑上的其他本地程序理论上仍可能访问浏览器数据。</aside>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>
