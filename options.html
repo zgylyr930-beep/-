@@ -26,6 +26,15 @@
       </div>
       <p id="status" role="status"></p>
     </section>
+    <section class="float-settings">
+      <div class="section-heading"><div><h2>浮球图片</h2><p>默认使用自嘲熊，也可以上传自己的图片。</p></div><img id="floatPreview" alt="浮球预览"></div>
+      <input id="floatImage" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+      <div class="actions">
+        <button id="chooseImage" type="button">上传自定义图片</button>
+        <button id="resetImage" class="secondary" type="button">恢复默认自嘲熊</button>
+      </div>
+      <p id="imageStatus" role="status"></p>
+    </section>
     <aside>提示：这是个人自用方案。API Key 不会写入插件源码，也不会通过 Chrome 账号同步，但电脑上的其他本地程序理论上仍可能访问浏览器数据。</aside>
   </main>
   <script src="options.js"></script>

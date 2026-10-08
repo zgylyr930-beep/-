@@ -6,6 +6,13 @@ header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
 h1 { margin: 0; font-size: 24px; }
 p { margin: 5px 0 0; color: #66716a; }
 section { padding: 26px; border: 1px solid #dce4df; border-radius: 16px; background: white; box-shadow: 0 8px 30px rgba(34,70,49,.06); }
+.float-settings { margin-top: 18px; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+h2 { margin: 0; font-size: 18px; }
+.section-heading p { font-size: 13px; }
+#floatPreview { width: 116px; height: 80px; padding: 5px; border: 1px solid #dce4df; border-radius: 14px; background: #f7faf8; object-fit: contain; }
+#floatImage { display: none; }
+#imageStatus { min-height: 22px; color: #16734a; }
 label { display: block; margin: 0 0 7px; font-size: 14px; font-weight: 600; }
 label[for="model"] { margin-top: 20px; }
 input, select, button { box-sizing: border-box; border-radius: 9px; font: inherit; }

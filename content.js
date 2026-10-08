@@ -11,6 +11,7 @@ let running = false;
 let floatButton;
 let autoObserver;
 let autoTimer;
+let suppressFloatClick = false;
 
 createFloatButton();
 setTimeout(initializeAutoTranslate, 1400);
@@ -138,10 +139,21 @@ function createFloatButton() {
   floatButton = document.createElement("button");
   floatButton.type = "button";
   floatButton.className = "ipt-float-button";
-  floatButton.textContent = "译";
+  const image = document.createElement("img");
+  image.className = "ipt-float-image";
+  image.alt = "";
+  image.draggable = false;
+  const badge = document.createElement("span");
+  badge.className = "ipt-float-badge";
+  badge.textContent = "译";
+  floatButton.append(image, badge);
   floatButton.title = "翻译英文网页";
   floatButton.setAttribute("aria-label", "翻译英文网页");
   floatButton.addEventListener("click", async () => {
+    if (suppressFloatClick) {
+      suppressFloatClick = false;
+      return;
+    }
     if (running) return;
     if (translatedElements.size || document.querySelector(".ipt-original-hidden")) {
       restorePage();
@@ -151,12 +163,104 @@ function createFloatButton() {
     floatButton.title = result.message;
   });
   document.documentElement.append(floatButton);
+  loadFloatImage();
+  enableFloatDragging();
+}
+
+async function loadFloatImage() {
+  const { customFloatImage } = await chrome.storage.local.get({ customFloatImage: "" });
+  applyFloatImage(customFloatImage);
+}
+
+function applyFloatImage(customImage) {
+  const image = floatButton?.querySelector(".ipt-float-image");
+  if (!image) return;
+  image.src = customImage || chrome.runtime.getURL("icons/bear-float.webp");
+}
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "local" && changes.customFloatImage) {
+    applyFloatImage(changes.customFloatImage.newValue || "");
+  }
+});
+
+async function enableFloatDragging() {
+  const { floatButtonPosition } = await chrome.storage.local.get({ floatButtonPosition: null });
+  if (floatButtonPosition) applyFloatPosition(floatButtonPosition);
+
+  let drag = null;
+  floatButton.addEventListener("pointerdown", event => {
+    if (event.button !== 0 || running) return;
+    const rect = floatButton.getBoundingClientRect();
+    drag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+      moved: false
+    };
+    floatButton.setPointerCapture(event.pointerId);
+    floatButton.classList.add("ipt-dragging");
+    event.preventDefault();
+  });
+
+  floatButton.addEventListener("pointermove", event => {
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 5) drag.moved = true;
+    if (!drag.moved) return;
+    moveFloatButton(event.clientX - drag.offsetX, event.clientY - drag.offsetY);
+    event.preventDefault();
+  });
+
+  const finishDrag = event => {
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    const moved = drag.moved;
+    drag = null;
+    floatButton.classList.remove("ipt-dragging");
+    if (!moved) return;
+    suppressFloatClick = true;
+    const rect = floatButton.getBoundingClientRect();
+    const maxX = Math.max(1, window.innerWidth - rect.width);
+    const maxY = Math.max(1, window.innerHeight - rect.height);
+    chrome.storage.local.set({
+      floatButtonPosition: { x: rect.left / maxX, y: rect.top / maxY }
+    });
+  };
+  floatButton.addEventListener("pointerup", finishDrag);
+  floatButton.addEventListener("pointercancel", finishDrag);
+  window.addEventListener("resize", keepFloatButtonInViewport, { passive: true });
+}
+
+function moveFloatButton(left, top) {
+  const size = floatButton.getBoundingClientRect();
+  const margin = 8;
+  const maxLeft = Math.max(margin, window.innerWidth - size.width - margin);
+  const maxTop = Math.max(margin, window.innerHeight - size.height - margin);
+  floatButton.style.setProperty("left", `${Math.min(Math.max(left, margin), maxLeft)}px`, "important");
+  floatButton.style.setProperty("top", `${Math.min(Math.max(top, margin), maxTop)}px`, "important");
+  floatButton.style.setProperty("right", "auto", "important");
+  floatButton.style.setProperty("bottom", "auto", "important");
+}
+
+function applyFloatPosition(position) {
+  const rect = floatButton.getBoundingClientRect();
+  const maxX = Math.max(0, window.innerWidth - rect.width);
+  const maxY = Math.max(0, window.innerHeight - rect.height);
+  moveFloatButton(maxX * Math.min(Math.max(position.x, 0), 1), maxY * Math.min(Math.max(position.y, 0), 1));
+}
+
+function keepFloatButtonInViewport() {
+  if (!floatButton?.isConnected) return;
+  const rect = floatButton.getBoundingClientRect();
+  moveFloatButton(rect.left, rect.top);
 }
 
 function setFloatState(state) {
   if (!floatButton?.isConnected) createFloatButton();
   floatButton.classList.toggle("ipt-busy", state === "busy");
-  floatButton.textContent = state === "busy" ? "…" : state === "translated" ? "原" : "译";
+  const badge = floatButton.querySelector(".ipt-float-badge");
+  if (badge) badge.textContent = state === "busy" ? "…" : state === "translated" ? "原" : "译";
   floatButton.title = state === "translated" ? "恢复英文原文" : state === "busy" ? "正在翻译" : "翻译英文网页";
 }
 
