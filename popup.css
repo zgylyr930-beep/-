@@ -11,6 +11,7 @@ h1 { margin: 0; color: #242943; font-size: 18px; letter-spacing: .02em; }
 .glass-card { padding: 4px 14px; border: 1px solid rgba(255,255,255,.88); border-radius: 15px; background: rgba(255,255,255,.68); box-shadow: 0 8px 26px rgba(70,76,134,.08), inset 0 1px 0 white; backdrop-filter: blur(12px); }
 .direction, .auto-row { display: flex; align-items: center; justify-content: space-between; min-height: 54px; color: #6f7489; font-size: 12px; }
 .direction { border-bottom: 1px solid rgba(99,105,146,.1); }
+.auto-row + .auto-row { border-top: 1px solid rgba(99,105,146,.1); }
 .direction strong { display: flex; align-items: center; gap: 7px; }
 .direction i { display: grid; place-items: center; min-width: 29px; height: 27px; padding: 0 6px; border-radius: 8px; color: #49516e; background: #eef1fb; font-style: normal; font-size: 11px; }
 .direction i:last-child { color: white; background: linear-gradient(135deg, #36cbb4, #6674dc); box-shadow: 0 4px 10px rgba(91,113,211,.25); }

@@ -1,11 +1,16 @@
 const status = document.querySelector("#status");
 const autoTranslate = document.querySelector("#autoTranslate");
+const floatButtonVisible = document.querySelector("#floatButtonVisible");
 
-chrome.storage.local.get({ autoTranslate: false }, settings => {
+chrome.storage.local.get({ autoTranslate: false, floatButtonVisible: true }, settings => {
   autoTranslate.checked = settings.autoTranslate;
+  floatButtonVisible.checked = settings.floatButtonVisible !== false;
 });
 autoTranslate.addEventListener("change", () => {
   chrome.storage.local.set({ autoTranslate: autoTranslate.checked });
+});
+floatButtonVisible.addEventListener("change", () => {
+  chrome.storage.local.set({ floatButtonVisible: floatButtonVisible.checked });
 });
 
 document.querySelector("#translate").addEventListener("click", () => send("TRANSLATE_PAGE"));

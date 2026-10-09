@@ -12,8 +12,9 @@ let floatButton;
 let autoObserver;
 let autoTimer;
 let suppressFloatClick = false;
+let floatButtonVisible = true;
 
-createFloatButton();
+initializeFloatButton();
 setTimeout(initializeAutoTranslate, 1400);
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -130,7 +131,13 @@ function restorePage() {
   setFloatState("idle");
 }
 
+async function initializeFloatButton() {
+  const settings = await chrome.storage.local.get({ floatButtonVisible: true });
+  setFloatButtonVisibility(settings.floatButtonVisible !== false);
+}
+
 function createFloatButton() {
+  if (!floatButtonVisible) return;
   const existing = document.querySelector(".ipt-float-button");
   if (existing) {
     floatButton = existing;
@@ -149,6 +156,11 @@ function createFloatButton() {
   floatButton.append(image, badge);
   floatButton.title = "翻译英文网页";
   floatButton.setAttribute("aria-label", "翻译英文网页");
+  floatButton.addEventListener("contextmenu", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    showFloatContextMenu(event.clientX, event.clientY);
+  });
   floatButton.addEventListener("click", async () => {
     if (suppressFloatClick) {
       suppressFloatClick = false;
@@ -167,6 +179,49 @@ function createFloatButton() {
   enableFloatDragging();
 }
 
+function setFloatButtonVisibility(visible) {
+  floatButtonVisible = visible;
+  closeFloatContextMenu();
+  if (visible) {
+    createFloatButton();
+  } else {
+    floatButton?.remove();
+    floatButton = null;
+  }
+}
+
+function closeFloatContextMenu() {
+  document.querySelector(".ipt-float-menu")?.remove();
+}
+
+function showFloatContextMenu(clientX, clientY) {
+  closeFloatContextMenu();
+  const menu = document.createElement("div");
+  menu.className = "ipt-float-menu";
+  menu.setAttribute("role", "menu");
+  const hideButton = document.createElement("button");
+  hideButton.type = "button";
+  hideButton.className = "ipt-float-menu-item";
+  hideButton.textContent = "隐藏浮球";
+  hideButton.setAttribute("role", "menuitem");
+  hideButton.addEventListener("click", async event => {
+    event.stopPropagation();
+    setFloatButtonVisibility(false);
+    await chrome.storage.local.set({ floatButtonVisible: false });
+  });
+  menu.addEventListener("pointerdown", event => event.stopPropagation());
+  menu.append(hideButton);
+  document.documentElement.append(menu);
+
+  const rect = menu.getBoundingClientRect();
+  const margin = 8;
+  const left = Math.min(Math.max(clientX, margin), Math.max(margin, window.innerWidth - rect.width - margin));
+  const top = Math.min(Math.max(clientY, margin), Math.max(margin, window.innerHeight - rect.height - margin));
+  menu.style.setProperty("left", `${left}px`, "important");
+  menu.style.setProperty("top", `${top}px`, "important");
+  setTimeout(() => document.addEventListener("pointerdown", closeFloatContextMenu, { once: true }), 0);
+}
+
 async function loadFloatImage() {
   const { customFloatImage } = await chrome.storage.local.get({ customFloatImage: "" });
   applyFloatImage(customFloatImage);
@@ -179,9 +234,9 @@ function applyFloatImage(customImage) {
 }
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName === "local" && changes.customFloatImage) {
-    applyFloatImage(changes.customFloatImage.newValue || "");
-  }
+  if (areaName !== "local") return;
+  if (changes.customFloatImage) applyFloatImage(changes.customFloatImage.newValue || "");
+  if (changes.floatButtonVisible) setFloatButtonVisibility(changes.floatButtonVisible.newValue !== false);
 });
 
 async function enableFloatDragging() {
@@ -257,7 +312,9 @@ function keepFloatButtonInViewport() {
 }
 
 function setFloatState(state) {
+  if (!floatButtonVisible) return;
   if (!floatButton?.isConnected) createFloatButton();
+  if (!floatButton) return;
   floatButton.classList.toggle("ipt-busy", state === "busy");
   const badge = floatButton.querySelector(".ipt-float-badge");
   if (badge) badge.textContent = state === "busy" ? "…" : state === "translated" ? "原" : "译";
@@ -286,7 +343,7 @@ async function initializeAutoTranslate() {
 
 function isEnglishAddedNode(node) {
   if (node.nodeType === Node.TEXT_NODE) return isEnglishText(node.nodeValue || "");
-  if (node.nodeType !== Node.ELEMENT_NODE || node.matches?.(".ipt-float-button, .ipt-selection")) return false;
+  if (node.nodeType !== Node.ELEMENT_NODE || node.matches?.(".ipt-float-button, .ipt-float-menu, .ipt-selection")) return false;
   return isEnglishText((node.innerText || node.textContent || "").slice(0, 2000));
 }
 
